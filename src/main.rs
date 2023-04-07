@@ -38,9 +38,6 @@ async fn main() -> Result<()> {
             token_holders.push(to);
         }
     }
-    let json_data = serde_json::to_string(&token_holders)?;
-    let mut file = File::create("token-holders.json")?;
-    file.write_all(json_data.as_bytes())?;
 
     println!("Done capturing token holders");
 
@@ -49,6 +46,7 @@ async fn main() -> Result<()> {
             *token,
             &token_holders,
             format!("{}-balances.json", config.token_names[i]),
+            config.block_height,
         )
         .await
         {
@@ -64,12 +62,13 @@ async fn write_balances(
     address: Address,
     holders: &Vec<H160>,
     file_name: String,
+    block: u64,
 ) -> Result<(), Error> {
     println!("Writing balances for {}", file_name);
 
     let mut token_holders: HashMap<H160, String> = HashMap::new();
     let mut new_balances: Vec<U256> = vec![];
-    match utils::get_erc20_balance_at_block(format!("{:#x}", address), holders, 16970099).await {
+    match utils::get_erc20_balance_at_block(format!("{:#x}", address), holders, block).await {
         Ok(balance) => {
             new_balances = balance;
         }

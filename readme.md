@@ -22,3 +22,9 @@ Edit `config.json` to update the block heights and add token addresses.
   "tokenNames": ["sdl", "stsdl", "sdl-slp"] // names to associate tokens to which are also used for json creation
 }
 ```
+
+## Run
+
+```bash
+cargo run
+```
