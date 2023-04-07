@@ -4,6 +4,8 @@ A tool to capture token balances of an ERC20 contract at a specific block height
 
 ## Setup
 
+Add rpc url as env variable `ETHEREUM_RPC_URL`
+
 Edit `config.json` to update the block heights and add token addresses.
 
 ```json
