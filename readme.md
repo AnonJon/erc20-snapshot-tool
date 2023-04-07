@@ -17,6 +17,6 @@ Edit `config.json` to update the block heights and add token addresses.
     "0xAEF186611EC96427d161107fFE14bba8aA1C2284",
     "0xd27b7d42d24d8f7c1cf5c46ccd3b986c396fde17"
   ],
-  "tokenNames": ["apr-sdl", "apr-stsdl", "apr-sdl-slp"] // names to associate tokens to which are also used for json creation
+  "tokenNames": ["sdl", "stsdl", "sdl-slp"] // names to associate tokens to which are also used for json creation
 }
 ```
