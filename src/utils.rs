@@ -2,7 +2,6 @@ use ethers::core::types::{Address, H160, U256};
 use serde::Deserialize;
 use serde_json;
 use serde_json::json;
-use std::env;
 use std::fs::File;
 use std::io::BufReader;
 use std::str::FromStr;
@@ -36,8 +35,8 @@ pub async fn get_erc20_balance_at_block(
     token_address: String,
     holder_addresses: &Vec<H160>,
     block: u64,
+    rpc_url: &str,
 ) -> Result<Vec<U256>, BalanceError> {
-    let rpc_url = env::var("ETHEREUM_RPC_URL").expect("ETHEREUM_RPC_URL must be set");
     let string_holders: Vec<String> = holder_addresses
         .iter()
         .map(|h| format!("{:#x}", h))
