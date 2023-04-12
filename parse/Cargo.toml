@@ -1,0 +1,13 @@
+[package]
+name = "parse"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+rustc-hex = "2.0"
+num-bigint = "0.4"
+num-traits = "0.2"
