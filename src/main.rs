@@ -1,3 +1,4 @@
+use ethers::prelude::abigen;
 use ethers::{
     core::types::{Address, Filter},
     providers::{Http, Middleware, Provider},
@@ -6,15 +7,24 @@ use eyre::Result;
 use std::collections::HashSet;
 use std::env;
 use std::sync::Arc;
-
 mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    abigen!(
+        IUniswapV2Pair,
+        r#"[
+            function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)
+        ]"#,
+    );
     let config = utils::load_config().expect("Error loading config file");
     let rpc_url = &env::var("ETHEREUM_RPC_URL").expect("ETHEREUM_RPC_URL must be set");
     let provider = Provider::<Http>::try_from(rpc_url)?;
     let client = Arc::new(provider);
+
+    let address = "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852".parse::<Address>()?;
+    let pair = IUniswapV2Pair::new(address, Arc::clone(&client));
+    let (reserve0, reserve1, _timestamp) = pair.get_reserves().block(1).call().await?;
 
     let mut token_holders: HashSet<Address> = HashSet::new();
     let mut from_block = config.contract_creation_block;
@@ -42,6 +52,7 @@ async fn main() -> Result<()> {
 
     println!("Done capturing token holders");
     let token_holders: Vec<Address> = token_holders.into_iter().collect();
+
     for (i, token) in config.token_addresses.iter().enumerate() {
         match utils::write_balances(
             *token,
