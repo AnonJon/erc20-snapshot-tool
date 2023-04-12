@@ -1,43 +1,60 @@
-use anyhow::Error;
+use ethers::prelude::abigen;
 use ethers::{
-    core::types::{Address, Filter, H160, U256},
+    core::types::{Address, Filter},
     providers::{Http, Middleware, Provider},
 };
 use eyre::Result;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::env;
-use std::fs::File;
-use std::io::prelude::*;
 use std::sync::Arc;
-
 mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    abigen!(
+        IUniswapV2Pair,
+        r#"[
+            function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)
+        ]"#,
+    );
     let config = utils::load_config().expect("Error loading config file");
     let rpc_url = &env::var("ETHEREUM_RPC_URL").expect("ETHEREUM_RPC_URL must be set");
     let provider = Provider::<Http>::try_from(rpc_url)?;
     let client = Arc::new(provider);
 
-    let mut token_holders: HashSet<Address> = HashSet::new();
-    let filter = Filter::new()
-        .address(config.contract_address)
-        .event("Transfer(address,address,uint256)")
-        .from_block(config.contract_creation_block)
-        .to_block(config.block_height);
-    let logs = client.get_logs(&filter).await?;
+    let address = "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852".parse::<Address>()?;
+    let pair = IUniswapV2Pair::new(address, Arc::clone(&client));
+    let (reserve0, reserve1, _timestamp) = pair.get_reserves().block(1).call().await?;
 
-    for log in logs.iter() {
-        let from = Address::from(log.topics[1]);
-        let to = Address::from(log.topics[2]);
-        token_holders.insert(from);
-        token_holders.insert(to);
+    let mut token_holders: HashSet<Address> = HashSet::new();
+    let mut from_block = config.contract_creation_block;
+    while from_block <= config.block_height {
+        let to_block = (from_block + config.batch_size).min(config.block_height);
+        println!("Fetching logs from block {} to {}", from_block, to_block);
+
+        let filter = Filter::new()
+            .address(config.contract_address)
+            .event("Transfer(address,address,uint256)")
+            .from_block(from_block)
+            .to_block(to_block);
+
+        let logs = client.get_logs(&filter).await?;
+
+        for log in logs.iter() {
+            let from = Address::from(log.topics[1]);
+            let to = Address::from(log.topics[2]);
+            token_holders.insert(from);
+            token_holders.insert(to);
+        }
+
+        from_block = to_block + 1;
     }
 
     println!("Done capturing token holders");
     let token_holders: Vec<Address> = token_holders.into_iter().collect();
+
     for (i, token) in config.token_addresses.iter().enumerate() {
-        match write_balances(
+        match utils::write_balances(
             *token,
             &token_holders,
             format!("{}-balances.json", config.token_names[i]),
@@ -50,46 +67,6 @@ async fn main() -> Result<()> {
             Err(err) => eprintln!("Error: {:?}", err),
         }
     }
-
-    Ok(())
-}
-
-async fn write_balances(
-    address: Address,
-    holders: &Vec<H160>,
-    file_name: String,
-    block: u64,
-    rpc_url: &str,
-) -> Result<(), Error> {
-    println!("Writing balances for {}", file_name);
-
-    let mut token_holders: HashMap<H160, String> = HashMap::new();
-    let mut new_balances: Vec<U256> = vec![];
-    match utils::get_erc20_balance_at_block(
-        format!("{:#x}", address),
-        holders,
-        block,
-        rpc_url.clone(),
-    )
-    .await
-    {
-        Ok(balance) => {
-            new_balances = balance;
-        }
-        Err(err) => {
-            eprintln!("ERROR: {:?}", err);
-        }
-    }
-    for (holder, balance) in holders.iter().zip(new_balances.iter()) {
-        if balance.as_u128() == 0 {
-            continue;
-        }
-        token_holders.insert(*holder, balance.to_string());
-    }
-
-    let json_data = serde_json::to_string(&token_holders)?;
-    let mut file = File::create(file_name)?;
-    file.write_all(json_data.as_bytes())?;
 
     Ok(())
 }
