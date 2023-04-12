@@ -1,8 +1,11 @@
+use anyhow::Error;
 use ethers::core::types::{Address, H160, U256};
 use serde::Deserialize;
 use serde_json;
 use serde_json::json;
+use std::collections::HashMap;
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::BufReader;
 use std::str::FromStr;
 
@@ -29,9 +32,46 @@ pub struct Config {
     pub token_addresses: Vec<Address>,
     #[serde(rename = "tokenNames")]
     pub token_names: Vec<String>,
+    #[serde(rename = "batchSize")]
+    pub batch_size: u64,
 }
 
-pub async fn get_erc20_balance_at_block(
+pub async fn write_balances(
+    address: Address,
+    holders: &Vec<H160>,
+    file_name: String,
+    block: u64,
+    rpc_url: &str,
+) -> Result<(), Error> {
+    println!("Writing balances for {}", file_name);
+
+    let mut token_holders: HashMap<H160, String> = HashMap::new();
+    let mut new_balances: Vec<U256> = vec![];
+    match get_erc20_balance_at_block(format!("{:#x}", address), holders, block, rpc_url.clone())
+        .await
+    {
+        Ok(balance) => {
+            new_balances = balance;
+        }
+        Err(err) => {
+            eprintln!("ERROR: {:?}", err);
+        }
+    }
+    for (holder, balance) in holders.iter().zip(new_balances.iter()) {
+        if balance.as_u128() == 0 {
+            continue;
+        }
+        token_holders.insert(*holder, balance.to_string());
+    }
+
+    let json_data = serde_json::to_string(&token_holders)?;
+    let mut file = File::create(file_name)?;
+    file.write_all(json_data.as_bytes())?;
+
+    Ok(())
+}
+
+async fn get_erc20_balance_at_block(
     token_address: String,
     holder_addresses: &Vec<H160>,
     block: u64,

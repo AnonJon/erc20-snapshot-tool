@@ -3,5 +3,6 @@
   "contractAddress": "",
   "blockHeight": 0,
   "tokenAddresses": [""],
-  "tokenNames": [""]
+  "tokenNames": [""],
+  "batchSize": 50000
 }
