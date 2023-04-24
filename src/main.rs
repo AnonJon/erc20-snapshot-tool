@@ -1,4 +1,3 @@
-use ethers::prelude::abigen;
 use ethers::{
     core::types::{Address, Filter},
     providers::{Http, Middleware, Provider},
@@ -11,20 +10,10 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    abigen!(
-        IUniswapV2Pair,
-        r#"[
-            function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)
-        ]"#,
-    );
     let config = utils::load_config().expect("Error loading config file");
     let rpc_url = &env::var("ETHEREUM_RPC_URL").expect("ETHEREUM_RPC_URL must be set");
     let provider = Provider::<Http>::try_from(rpc_url)?;
     let client = Arc::new(provider);
-
-    let address = "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852".parse::<Address>()?;
-    let pair = IUniswapV2Pair::new(address, Arc::clone(&client));
-    let (reserve0, reserve1, _timestamp) = pair.get_reserves().block(1).call().await?;
 
     let mut token_holders: HashSet<Address> = HashSet::new();
     let mut from_block = config.contract_creation_block;
@@ -34,6 +23,30 @@ async fn main() -> Result<()> {
 
         let filter = Filter::new()
             .address(config.contract_address)
+            .event("Transfer(address,address,uint256)")
+            .from_block(from_block)
+            .to_block(to_block);
+
+        let logs = client.get_logs(&filter).await?;
+
+        for log in logs.iter() {
+            let from = Address::from(log.topics[1]);
+            let to = Address::from(log.topics[2]);
+            token_holders.insert(from);
+            token_holders.insert(to);
+        }
+
+        from_block = to_block + 1;
+    }
+
+    // capture second token
+    from_block = config.contract_creation_block;
+    while from_block <= config.block_height {
+        let to_block = (from_block + config.batch_size).min(config.block_height);
+        println!("Fetching logs from block {} to {}", from_block, to_block);
+        let address = "0xd27b7d42d24d8f7c1cf5c46ccd3b986c396fde17".parse::<Address>()?;
+        let filter = Filter::new()
+            .address(address)
             .event("Transfer(address,address,uint256)")
             .from_block(from_block)
             .to_block(to_block);
