@@ -1,12 +1,8 @@
 {
-  "contractCreation": 16118164,
-  "contractAddress": "0xA95C5ebB86E0dE73B4fB8c47A45B792CFeA28C23",
-  "blockHeight": 16970099,
-  "tokenAddresses": [
-    "0xA95C5ebB86E0dE73B4fB8c47A45B792CFeA28C23",
-    "0xAEF186611EC96427d161107fFE14bba8aA1C2284",
-    "0xd27b7d42d24d8f7c1cf5c46ccd3b986c396fde17"
-  ],
-  "tokenNames": ["apr-sdl", "apr-stsdl", "apr-sdl-slp"],
+  "contractCreation": 12110836,
+  "contractAddress": "0x89B641464E82697ADfc6CCcbF52b93a89B791E1F",
+  "blockHeight": 16198525,
+  "tokenAddresses": ["0x89B641464E82697ADfc6CCcbF52b93a89B791E1F"],
+  "tokenNames": ["dec-lpla"],
   "batchSize": 50000
 }
