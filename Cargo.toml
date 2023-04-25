@@ -1,5 +1,5 @@
 [package]
-name = "ethereum-erc20-snapshot"
+name = "ethereum_snapshot"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,3 +12,4 @@ serde = { version = "1.0", features = ["derive"] }
 anyhow = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 num-bigint = "0.4"
+futures = "0.3"

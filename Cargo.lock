@@ -913,20 +913,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethereum-erc20-snapshot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "ethers",
- "eyre",
- "num-bigint",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "ethereum-types"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -940,6 +926,21 @@ dependencies = [
  "primitive-types",
  "scale-info",
  "uint",
+]
+
+[[package]]
+name = "ethereum_snapshot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ethers",
+ "eyre",
+ "futures",
+ "num-bigint",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

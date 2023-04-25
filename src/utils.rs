@@ -1,13 +1,18 @@
 use anyhow::Error;
-use ethers::core::types::{Address, H160, U256};
+
+use ethers::{
+    core::types::{Address, Filter, H160, U256},
+    providers::{Http, Middleware, Provider},
+};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::json;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::str::FromStr;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum BalanceError {
@@ -34,6 +39,34 @@ pub struct Config {
     pub token_names: Vec<String>,
     #[serde(rename = "batchSize")]
     pub batch_size: u64,
+}
+
+pub async fn process_blocks(
+    client: Arc<Provider<Http>>,
+    from_block: u64,
+    to_block: u64,
+    contract_address: Address,
+) -> Result<HashSet<Address>, Error> {
+    println!("Fetching logs from block {} to {}", from_block, to_block);
+
+    let filter = Filter::new()
+        .address(contract_address)
+        .event("Transfer(address,address,uint256)")
+        .from_block(from_block)
+        .to_block(to_block);
+
+    let logs = client.get_logs(&filter).await?;
+
+    let mut token_holders: HashSet<Address> = HashSet::new();
+
+    for log in logs.iter() {
+        let from = Address::from(log.topics[1]);
+        let to = Address::from(log.topics[2]);
+        token_holders.insert(from);
+        token_holders.insert(to);
+    }
+
+    Ok(token_holders)
 }
 
 #[derive(Serialize, Deserialize, Debug)]
