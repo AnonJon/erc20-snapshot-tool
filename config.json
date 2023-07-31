@@ -1,7 +1,7 @@
 {
   "contractCreation": 12110836,
   "contractAddress": "0x89B641464E82697ADfc6CCcbF52b93a89B791E1F",
-  "blockHeight": 16198525,
+  "blockHeight": 16119858,
   "tokenAddresses": ["0x89B641464E82697ADfc6CCcbF52b93a89B791E1F"],
   "tokenNames": ["dec-lpla-2"],
   "batchSize": 50000
