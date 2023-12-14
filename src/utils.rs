@@ -60,7 +60,7 @@ pub async fn write_balances(
             new_balances = balance;
         }
         Err(err) => {
-            eprintln!("ERROR: {:?}", err);
+            eprintln!("ERROR_write_balances: {:?}", err);
         }
     }
     if address

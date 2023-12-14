@@ -40,28 +40,28 @@ async fn main() -> Result<()> {
     }
 
     // capture second token
-    from_block = config.contract_creation_block;
-    while from_block <= config.block_height {
-        let to_block = (from_block + config.batch_size).min(config.block_height);
-        println!("Fetching logs from block {} to {}", from_block, to_block);
-        let address = "0xd27b7d42d24d8f7c1cf5c46ccd3b986c396fde17".parse::<Address>()?;
-        let filter = Filter::new()
-            .address(address)
-            .event("Transfer(address,address,uint256)")
-            .from_block(from_block)
-            .to_block(to_block);
+    // from_block = config.contract_creation_block;
+    // while from_block <= config.block_height {
+    //     let to_block = (from_block + config.batch_size).min(config.block_height);
+    //     println!("Fetching logs from block {} to {}", from_block, to_block);
+    //     let address = "0xd27b7d42d24d8f7c1cf5c46ccd3b986c396fde17".parse::<Address>()?;
+    //     let filter = Filter::new()
+    //         .address(address)
+    //         .event("Transfer(address,address,uint256)")
+    //         .from_block(from_block)
+    //         .to_block(to_block);
 
-        let logs = client.get_logs(&filter).await?;
+    //     let logs = client.get_logs(&filter).await?;
 
-        for log in logs.iter() {
-            let from = Address::from(log.topics[1]);
-            let to = Address::from(log.topics[2]);
-            token_holders.insert(from);
-            token_holders.insert(to);
-        }
+    //     for log in logs.iter() {
+    //         let from = Address::from(log.topics[1]);
+    //         let to = Address::from(log.topics[2]);
+    //         token_holders.insert(from);
+    //         token_holders.insert(to);
+    //     }
 
-        from_block = to_block + 1;
-    }
+    //     from_block = to_block + 1;
+    // }
 
     println!("Done capturing token holders");
     let token_holders: Vec<Address> = token_holders.into_iter().collect();
