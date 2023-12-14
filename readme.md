@@ -19,7 +19,7 @@ Edit `config.json` to update the block heights and add token addresses.
     "0xb8b295df2cd735b15BE5Eb419517Aa626fc43cD5"
   ],
   "tokenNames": ["link", "stLink"], // names to associate tokens which are also used for json creation
-  "batchSize": 50000 // how many blocks to batch at a time, can be configured higher depending on needs
+  "batchSize": 50000 // this can be configured to your specific case but set low by default
 }
 ```
 
